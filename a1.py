@@ -39,33 +39,43 @@ def preprocess(x_train, y_train, N_train):
     stemmer = PorterStemmer()
     lemmatizer = WordNetLemmatizer()
 
-    # define a preprocessor with stemmer
-    def stemmer_preprocessor(text):
+    def common_preprocessing(text):
+        # lowercase and remove special chars
         text = text.lower()
         text = re.sub("\\W", " ", text)
 
-        # stem words
+        # tokenize text
         words = word_tokenize(text)
+
+        # filter out stopwords and punctuation
         filtered_words = [w for w in words if not w in stopwords_set and w not in string.punctuation]
+
+        return filtered_words
+
+    # define a preprocessor with stemmer
+    def stemmer_preprocessor(text):
+        filtered_words = common_preprocessing(text)
+
+        # stem words
         stemmed_words = [stemmer.stem(word = word) for word in filtered_words]
         return ' '.join(stemmed_words)
 
+    # define a preprocessor with lemmatizer
     def lemmatizer_preprocessor(text):
-        text = text.lower()
-        text = re.sub("\\W", " ", text)
+        filtered_words = common_preprocessing(text)
 
         # lemmatize words
-        words = word_tokenize(text)
-        filtered_words = [w for w in words if not w in stopwords_set and w not in string.punctuation]
         lemmatized_words = [lemmatizer.lemmatize(word = word) for word in filtered_words]
         return ' '.join(lemmatized_words)
 
-    # remove stopwords and ignore words that appear in less than 2 samples
+    # min_df=2 -> ignore words that appear in less than 2 samples
     cv = CountVectorizer(min_df = 2, preprocessor=lemmatizer_preprocessor)
     x_traincv = cv.fit_transform(x_train)
     
     feature_vector = x_traincv.toarray()
     print(feature_vector.shape)
+
+    return feature_vector
     
 
 def __init__():
@@ -78,6 +88,6 @@ def __init__():
     N_train, N_test = len(x_train), len(x_test)
 
     # preprocess training data
-    preprocess(x_train, y_train, N_train)
+    feature_vector = preprocess(x_train, y_train, N_train)
 
 __init__()
