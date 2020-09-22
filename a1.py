@@ -34,41 +34,43 @@ def read_data():
 
     return ([x_train, y_train], [x_test, y_test])
 
-def preprocess(x_train, y_train, N_train):
-    stopwords_set = set(stopwords.words('english'))
+### Preprocess to feature vectors
 
-    stemmer = PorterStemmer()
-    lemmatizer = WordNetLemmatizer()
+stopwords_set = set(stopwords.words('english'))
 
-    def common_preprocessing(text):
-        # lowercase and remove special chars
-        text = text.lower()
-        text = re.sub("\\W", " ", text)
+stemmer = PorterStemmer()
+lemmatizer = WordNetLemmatizer()
 
-        # tokenize text
-        words = word_tokenize(text)
+def common_preprocessing(text):
+    # lowercase and remove special chars
+    text = text.lower()
+    text = re.sub("\\W", " ", text)
 
-        # filter out stopwords and punctuation
-        filtered_words = [w for w in words if not w in stopwords_set and w not in string.punctuation]
+    # tokenize text
+    words = word_tokenize(text)
 
-        return filtered_words
+    # filter out stopwords and punctuation
+    filtered_words = [w for w in words if not w in stopwords_set and w not in string.punctuation]
 
-    # define a preprocessor with stemmer
-    def stemmer_preprocessor(text):
-        filtered_words = common_preprocessing(text)
+    return filtered_words
 
-        # stem words
-        stemmed_words = [stemmer.stem(word = word) for word in filtered_words]
-        return ' '.join(stemmed_words)
+# define a preprocessor with stemmer
+def stemmer_preprocessor(text):
+    filtered_words = common_preprocessing(text)
 
-    # define a preprocessor with lemmatizer
-    def lemmatizer_preprocessor(text):
-        filtered_words = common_preprocessing(text)
+    # stem words
+    stemmed_words = [stemmer.stem(word = word) for word in filtered_words]
+    return ' '.join(stemmed_words)
 
-        # lemmatize words
-        lemmatized_words = [lemmatizer.lemmatize(word = word) for word in filtered_words]
-        return ' '.join(lemmatized_words)
+# define a preprocessor with lemmatizer
+def lemmatizer_preprocessor(text):
+    filtered_words = common_preprocessing(text)
 
+    # lemmatize words
+    lemmatized_words = [lemmatizer.lemmatize(word = word) for word in filtered_words]
+    return ' '.join(lemmatized_words)
+
+def preprocess_train(x_train, y_train, N_train):
     # min_df=2 -> ignore words that appear in less than 2 samples
     cv = CountVectorizer(min_df = 2, preprocessor=lemmatizer_preprocessor)
     x_traincv = cv.fit_transform(x_train)
@@ -76,7 +78,13 @@ def preprocess(x_train, y_train, N_train):
     feature_vector = x_traincv.toarray()
     feature_vector_words = cv.get_feature_names()
 
-    return feature_vector, feature_vector_words
+    return feature_vector, feature_vector_words, cv
+
+def preprocess_test(x_test, cv):
+    x_testcv = cv.transform(x_test)
+    feature_vector = x_testcv.toarray()
+    
+    return feature_vector
     
 ##### CLASSIFIERS #######
 
@@ -115,10 +123,10 @@ class NB_Classifier:
         result = self.nbc.classify_many(dataset_pred)
         return result
 
-def run_nb_classifier(feature_vector_train, y_train, feature_vector_words_train, feature_vector_test, feature_vector_words_test, y_test):
+def run_nb_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test):
     nbc = NB_Classifier()
-    nbc.fit(feature_vector_train, y_train, feature_vector_words_train)
-    predictions = nbc.predict(feature_vector_test, feature_vector_words_test)
+    nbc.fit(feature_vector_train, y_train, feature_vector_words)
+    predictions = nbc.predict(feature_vector_test, feature_vector_words)
 
     # quantify nbc accuracy
     num_correct = 0
@@ -141,11 +149,11 @@ def __init__():
     N_train, N_test = len(x_train), len(x_test)
 
     # preprocess training + testing data
-    feature_vector_train, feature_vector_words_train = preprocess(x_train, y_train, N_train)
-    feature_vector_test, feature_vector_words_test = preprocess(x_test, y_test, N_test)
+    feature_vector_train, feature_vector_words, cv = preprocess_train(x_train, y_train, N_train)
+    feature_vector_test = preprocess_test(x_test, cv)
 
     # run nb_classifier
-    nb_accuracy = run_nb_classifier(feature_vector_train, y_train, feature_vector_words_train, feature_vector_test, feature_vector_words_test, y_test)
+    nb_accuracy = run_nb_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test)
     print("Accuracy for NB is ",nb_accuracy)
 
 __init__()
