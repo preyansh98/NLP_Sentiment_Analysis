@@ -6,9 +6,11 @@ from nltk.classify import NaiveBayesClassifier
 import numpy as np
 import sklearn
 from sklearn.feature_extraction.text import CountVectorizer
-from sklearn.linear_model import LogisticRegression
+from sklearn.linear_model import LogisticRegression, Perceptron
+from sklearn import svm
 import string
 import re
+import random
 
 DATA_ENCODING = "ISO-8859-1"
 TRAIN_TEST_SPLIT = 0.75 #define ratio of dataset used for training vs testing
@@ -127,16 +129,37 @@ class NB_Classifier:
 # Logistic Regression Classifier
 class LR_Classifier:
 
+    def __init__(self):
+        model = LogisticRegression(random_state=0, C=2)
+        self.model = model
+        return
+
     def fit(self, x, y):
         self.x = x
         self.y = y
-        
-        model = LogisticRegression(random_state=0, C=2)
-        model.fit(x,y)
 
-        self.model = model
+        self.model.fit(x,y)
+        
         return self
     
+    def predict(self, x_test):
+        return self.model.predict(x_test)
+
+# SVM Classifier
+class SVM_Classifier:
+
+    def __init__(self):
+        model = svm.LinearSVC()
+        self.model = model
+        return
+
+    def fit(self, x, y):
+        self.x = x
+        self.y = y
+
+        self.model.fit(x,y)
+        return self
+
     def predict(self, x_test):
         return self.model.predict(x_test)
 
@@ -151,6 +174,27 @@ def run_lr_classifier(feature_vector_train, y_train, feature_vector_words, featu
     logreg = LogisticRegression()
     logreg.fit(feature_vector_train, y_train)
     predictions = logreg.predict(feature_vector_test)
+
+    return calculate_accuracy(predictions, y_test)
+
+def run_svm_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test):
+    linear_svm = SVM_Classifier()
+    linear_svm.fit(feature_vector_train, y_train)
+    predictions = linear_svm.predict(feature_vector_test)
+
+    return calculate_accuracy(predictions, y_test)
+
+def run_randombaseline_classifier(feature_vector_test, y_test):
+
+    # choose positive (1) or negative (0) with equal probability
+    predictions = [random.randint(0,1) for i in range(len(feature_vector_test))]
+
+    return calculate_accuracy(predictions, y_test)
+
+def run_perceptron_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test):
+    perceptron = Perceptron(tol=1e-3,random_state=0)
+    perceptron.fit(feature_vector_train, y_train)
+    predictions = perceptron.predict(feature_vector_test)
 
     return calculate_accuracy(predictions, y_test)
 
@@ -185,5 +229,17 @@ def __init__():
     # run logreg classifier
     lgreg_accuracy = run_lr_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test)
     print("Accuracy for LogReg is ", lgreg_accuracy)
+
+    # run linear svm classifier
+    linsvm_accuracy = run_svm_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test)
+    print("Accuracy for Linear SVM is ", linsvm_accuracy)
+
+    # run random baseline 
+    random_baseline = run_randombaseline_classifier(feature_vector_test, y_test)
+    print("Accuracy for Random Baseline is ", random_baseline)
+
+    # run perceptron
+    perceptron_accuracy = run_perceptron_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test)
+    print("Accuracy for Perceptron is ", perceptron_accuracy)
 
 __init__()
