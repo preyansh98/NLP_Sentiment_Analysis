@@ -79,6 +79,8 @@ def preprocess(x_train, y_train, N_train):
     return feature_vector, feature_vector_words
     
 ##### CLASSIFIERS #######
+
+# Naive-Bayes Classifier
 class NB_Classifier:
 
     def fit(self, x, y, feature_names):
@@ -112,23 +114,8 @@ class NB_Classifier:
         
         result = self.nbc.classify_many(dataset_pred)
         return result
-        
 
-def __init__():
-    # first read training and test data
-    training_data, test_data = read_data()
-
-    x_train, y_train = training_data
-    x_test, y_test = test_data
-
-    N_train, N_test = len(x_train), len(x_test)
-
-    # preprocess training data
-    feature_vector_train, feature_vector_words_train = preprocess(x_train, y_train, N_train)
-
-    # preprocess testing data
-    feature_vector_test, feature_vector_words_test = preprocess(x_test, y_test, N_test)
-
+def run_nb_classifier(feature_vector_train, y_train, feature_vector_words_train, feature_vector_test, feature_vector_words_test, y_test):
     nbc = NB_Classifier()
     nbc.fit(feature_vector_train, y_train, feature_vector_words_train)
     predictions = nbc.predict(feature_vector_test, feature_vector_words_test)
@@ -141,7 +128,24 @@ def __init__():
         if (prediction == y_test[test_no]):
             num_correct += 1
 
-    print("Accuracy for NBC is %f", num_correct/num_sampled)    
-        
+    accuracy = num_correct/num_sampled
+    return accuracy
+
+def __init__():
+    # first read training and test data
+    training_data, test_data = read_data()
+
+    x_train, y_train = training_data
+    x_test, y_test = test_data
+
+    N_train, N_test = len(x_train), len(x_test)
+
+    # preprocess training + testing data
+    feature_vector_train, feature_vector_words_train = preprocess(x_train, y_train, N_train)
+    feature_vector_test, feature_vector_words_test = preprocess(x_test, y_test, N_test)
+
+    # run nb_classifier
+    nb_accuracy = run_nb_classifier(feature_vector_train, y_train, feature_vector_words_train, feature_vector_test, feature_vector_words_test, y_test)
+    print("Accuracy for NB is ",nb_accuracy)
 
 __init__()
