@@ -6,6 +6,7 @@ from nltk.classify import NaiveBayesClassifier
 import numpy as np
 import sklearn
 from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.linear_model import LogisticRegression
 import string
 import re
 
@@ -123,12 +124,37 @@ class NB_Classifier:
         result = self.nbc.classify_many(dataset_pred)
         return result
 
+# Logistic Regression Classifier
+class LR_Classifier:
+
+    def fit(self, x, y):
+        self.x = x
+        self.y = y
+        
+        model = LogisticRegression(random_state=0, C=2)
+        model.fit(x,y)
+
+        self.model = model
+        return self
+    
+    def predict(self, x_test):
+        return self.model.predict(x_test)
+
 def run_nb_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test):
     nbc = NB_Classifier()
     nbc.fit(feature_vector_train, y_train, feature_vector_words)
     predictions = nbc.predict(feature_vector_test, feature_vector_words)
 
-    # quantify nbc accuracy
+    return calculate_accuracy(predictions, y_test)
+
+def run_lr_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test):
+    logreg = LogisticRegression()
+    logreg.fit(feature_vector_train, y_train)
+    predictions = logreg.predict(feature_vector_test)
+
+    return calculate_accuracy(predictions, y_test)
+
+def calculate_accuracy(predictions, y_test):
     num_correct = 0
     num_sampled = len(predictions)
 
@@ -155,5 +181,9 @@ def __init__():
     # run nb_classifier
     nb_accuracy = run_nb_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test)
     print("Accuracy for NB is ",nb_accuracy)
+
+    # run logreg classifier
+    lgreg_accuracy = run_lr_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test)
+    print("Accuracy for LogReg is ", lgreg_accuracy)
 
 __init__()
