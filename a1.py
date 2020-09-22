@@ -13,7 +13,7 @@ import re
 import random
 
 DATA_ENCODING = "ISO-8859-1"
-TRAIN_TEST_SPLIT = 0.75 #define ratio of dataset used for training vs testing
+TRAIN_TEST_SPLIT = 0.8 #define ratio of dataset used for training vs testing
 
 def read_data():
     pos_lines = []
@@ -168,6 +168,7 @@ def run_nb_classifier(feature_vector_train, y_train, feature_vector_words, featu
     nbc.fit(feature_vector_train, y_train, feature_vector_words)
     predictions = nbc.predict(feature_vector_test, feature_vector_words)
 
+    #calculate_for_confusion_matrix(predictions, y_test)
     return calculate_accuracy(predictions, y_test)
 
 def run_lr_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test):
@@ -209,6 +210,26 @@ def calculate_accuracy(predictions, y_test):
     accuracy = num_correct/num_sampled
     return accuracy
 
+def calculate_for_confusion_matrix(predictions, y_test):
+    tp = 0
+    tn = 0
+    fn = 0
+    fp = 0
+
+    for (test_no, prediction) in enumerate(predictions):
+        if (prediction == y_test[test_no]):
+            if prediction == 1:
+                tp += 1
+            else:
+                tn += 1
+        else:
+            if prediction == 1:
+                fp += 1
+            else:
+                fn += 1
+
+    print(tp, tn, fn, fp)
+
 def __init__():
     # first read training and test data
     training_data, test_data = read_data()
@@ -222,6 +243,7 @@ def __init__():
     feature_vector_train, feature_vector_words, cv = preprocess_train(x_train, y_train, N_train)
     feature_vector_test = preprocess_test(x_test, cv)
 
+    print(feature_vector_train.shape)
     # run nb_classifier
     nb_accuracy = run_nb_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test)
     print("Accuracy for NB is ",nb_accuracy)
@@ -230,15 +252,15 @@ def __init__():
     lgreg_accuracy = run_lr_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test)
     print("Accuracy for LogReg is ", lgreg_accuracy)
 
-    # run linear svm classifier
+    # # run linear svm classifier
     linsvm_accuracy = run_svm_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test)
     print("Accuracy for Linear SVM is ", linsvm_accuracy)
 
-    # run random baseline 
+    # # run random baseline 
     random_baseline = run_randombaseline_classifier(feature_vector_test, y_test)
     print("Accuracy for Random Baseline is ", random_baseline)
 
-    # run perceptron
+    # # run perceptron
     perceptron_accuracy = run_perceptron_classifier(feature_vector_train, y_train, feature_vector_words, feature_vector_test, y_test)
     print("Accuracy for Perceptron is ", perceptron_accuracy)
 
