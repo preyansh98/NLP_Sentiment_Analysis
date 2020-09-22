@@ -2,6 +2,7 @@ import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer, WordNetLemmatizer
+from nltk.classify import NaiveBayesClassifier
 import numpy as np
 import sklearn
 from sklearn.feature_extraction.text import CountVectorizer
@@ -73,10 +74,45 @@ def preprocess(x_train, y_train, N_train):
     x_traincv = cv.fit_transform(x_train)
     
     feature_vector = x_traincv.toarray()
-    print(feature_vector.shape)
+    feature_vector_words = cv.get_feature_names()
 
-    return feature_vector
+    return feature_vector, feature_vector_words
     
+##### CLASSIFIERS #######
+class NB_Classifier:
+
+    def fit(self, x, y, feature_names):
+        dataset = []
+
+        for (train_no, feature_vec) in enumerate(x):
+            featureset = dict()
+            label = y[train_no]
+
+            for i in range(len(feature_vec)):
+                featureset[feature_names[i]] = x[train_no][i]
+
+            dataset.append((featureset, label))
+
+        self.dataset = dataset
+        self.nbc = NaiveBayesClassifier.train(dataset)
+
+        return self
+
+    def predict(self, x_test, feature_names):
+        dataset_pred = []
+
+        # format x_test to featureset
+        for (test_no, feature_vec) in enumerate(x_test):
+            featureset = dict()
+
+            for i in range(len(feature_vec)):
+                featureset[feature_names[i]] = x_test[test_no][i]
+
+            dataset_pred.append(featureset)
+        
+        result = self.nbc.classify_many(dataset_pred)
+        return result
+        
 
 def __init__():
     # first read training and test data
@@ -88,6 +124,24 @@ def __init__():
     N_train, N_test = len(x_train), len(x_test)
 
     # preprocess training data
-    feature_vector = preprocess(x_train, y_train, N_train)
+    feature_vector_train, feature_vector_words_train = preprocess(x_train, y_train, N_train)
+
+    # preprocess testing data
+    feature_vector_test, feature_vector_words_test = preprocess(x_test, y_test, N_test)
+
+    nbc = NB_Classifier()
+    nbc.fit(feature_vector_train, y_train, feature_vector_words_train)
+    predictions = nbc.predict(feature_vector_test, feature_vector_words_test)
+
+    # quantify nbc accuracy
+    num_correct = 0
+    num_sampled = len(predictions)
+
+    for (test_no, prediction) in enumerate(predictions):
+        if (prediction == y_test[test_no]):
+            num_correct += 1
+
+    print("Accuracy for NBC is %f", num_correct/num_sampled)    
+        
 
 __init__()
