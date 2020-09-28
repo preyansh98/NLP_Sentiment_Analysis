@@ -1,4 +1,5 @@
 import nltk
+from nltk import pos_tag
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
 from nltk.stem import PorterStemmer, WordNetLemmatizer
@@ -70,7 +71,18 @@ def lemmatizer_preprocessor(text):
     filtered_words = common_preprocessing(text)
 
     # lemmatize words
-    lemmatized_words = [lemmatizer.lemmatize(word = word) for word in filtered_words]
+    lemmatized_words = []
+
+    # tag with pos to get accurate results from lemmatizer
+    for word, tag in pos_tag(filtered_words):
+        wntag = tag[0].lower()
+        wntag = wntag if wntag in ['a','r','n','v'] else None
+
+        if wntag:
+            lemmatized_words.append(lemmatizer.lemmatize(word, wntag))
+        else:
+            lemmatized_words.append(word)
+
     return ' '.join(lemmatized_words)
 
 def preprocess_train(x_train, y_train, N_train):
