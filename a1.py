@@ -87,7 +87,7 @@ def lemmatizer_preprocessor(text):
 
 def preprocess_train(x_train, y_train, N_train):
     # min_df=2 -> ignore words that appear in less than 2 samples
-    cv = CountVectorizer(min_df = 4, preprocessor=lemmatizer_preprocessor)
+    cv = CountVectorizer(min_df = 2, preprocessor=lemmatizer_preprocessor)
     x_traincv = cv.fit_transform(x_train)
     
     feature_vector = x_traincv.toarray()
